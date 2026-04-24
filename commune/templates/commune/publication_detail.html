@@ -1,0 +1,156 @@
+{% extends "commune/base.html" %}
+
+{% block title %}{{ publication.title }} — Niakhar{% endblock %}
+
+{% block extra_head %}
+<meta property="og:title" content="{{ share_title|escape }}">
+<meta property="og:type" content="article">
+<meta property="og:url" content="{{ share_url }}">
+{% if publication.image %}
+<meta property="og:image" content="{{ request.build_absolute_uri }}{{ publication.image.url }}">
+{% endif %}
+<meta name="twitter:card" content="summary_large_image">
+{% endblock %}
+
+{% block content %}
+<div class="article-shell">
+  <article>
+    <header class="article-header mb-3">
+      <div class="paper-card py-4">
+        <h1 class="article-title font-display">{{ publication.title }}</h1>
+        <div class="article-meta">
+          <span class="meta-pill">Publication</span>
+          <time datetime="{{ publication.created_at|date:'c' }}">{{ publication.created_at|date:"d/m/Y à H:i" }}</time>
+          {% if publication.author %}
+          <span>Par <strong>{{ publication.author.get_username }}</strong></span>
+          {% endif %}
+        </div>
+      </div>
+    </header>
+
+    {% if publication.image %}
+    <figure class="figure-article mb-4">
+      <img src="{{ publication.image.url }}" class="w-100" alt="">
+    </figure>
+    {% endif %}
+
+    <div class="paper-card">
+      <div class="publication-content">{{ publication.content|linebreaks }}</div>
+
+      <div class="share-bar">
+        <span class="share-label">Partager</span>
+        <a class="btn-share btn-share-wa" target="_blank" rel="noopener noreferrer"
+           href="https://wa.me/?text={{ share_title|urlencode }}%20{{ share_url|urlencode }}">
+          WhatsApp
+        </a>
+        <a class="btn-share btn-share-fb" target="_blank" rel="noopener noreferrer"
+           href="https://www.facebook.com/sharer/sharer.php?u={{ share_url|urlencode }}">
+          Facebook
+        </a>
+        <a class="btn-share btn-share-x" target="_blank" rel="noopener noreferrer"
+           href="https://twitter.com/intent/tweet?url={{ share_url|urlencode }}&text={{ share_title|urlencode }}">
+          X
+        </a>
+        <button type="button" class="btn-share btn-share-copy" id="btn-copy-link" data-url="{{ share_url }}">Copier le lien</button>
+      </div>
+
+      {% if user.is_authenticated %}
+      <div class="like-bar">
+        <form action="{% url 'commune:toggle_like' publication.slug %}" method="post" class="d-inline">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-outline-primary btn-like">
+            {% if liked %}♥ J’aime · {{ like_count }}{% else %}♡ J’aime · {{ like_count }}{% endif %}
+          </button>
+        </form>
+      </div>
+      {% else %}
+      <p class="text-muted small mb-0">
+        <a href="{% url 'commune:login' %}?next={{ request.get_full_path|urlencode }}">Connectez-vous</a> pour aimer ou commenter cette publication.
+      </p>
+      {% endif %}
+    </div>
+
+    {% if user.is_authenticated and user.is_commune_admin %}
+    <div class="admin-strip mb-4 d-flex flex-wrap align-items-center gap-2">
+      <span class="small fw-semibold text-dark me-1">Administration</span>
+      <a href="{% url 'commune:admin_publication_edit' publication.slug %}" class="btn btn-sm btn-warning rounded-pill">Modifier</a>
+      <form action="{% url 'commune:admin_publication_delete' publication.slug %}" method="post" class="d-inline" onsubmit="return confirm('Supprimer cette publication ?');">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill">Supprimer</button>
+      </form>
+    </div>
+    {% endif %}
+
+    <section class="comments-section">
+      <h2 class="font-display">Commentaires</h2>
+
+      {% if comment_form %}
+      <div class="comment-form-card">
+        <form action="{% url 'commune:add_comment' publication.slug %}" method="post">
+          {% csrf_token %}
+          {{ comment_form.content }}
+          <button type="submit" class="btn btn-primary mt-2 rounded-pill px-4">Publier le commentaire</button>
+        </form>
+      </div>
+      {% endif %}
+
+      <div class="comment-thread">
+        {% for comment in comments %}
+        <div id="comment-{{ comment.pk }}" class="comment-card {% if not comment.is_visible %}border-warning{% endif %}">
+          <div class="comment-head">
+            <div>
+              <span class="comment-author">{{ comment.author.get_username }}</span>
+              <span class="text-muted small ms-1">{{ comment.created_at|date:"d/m/Y H:i" }}</span>
+              {% if not comment.is_visible %}<span class="badge rounded-pill text-bg-warning ms-1">Masqué</span>{% endif %}
+            </div>
+            {% if user.is_authenticated and user.is_commune_admin %}
+            <form action="{% url 'commune:admin_comment_toggle_visibility' comment.pk %}" method="post" class="d-inline">
+              {% csrf_token %}
+              <input type="hidden" name="next" value="{{ request.path }}">
+              <button type="submit" class="btn btn-link btn-sm p-0 text-muted">{% if comment.is_visible %}Masquer{% else %}Afficher{% endif %}</button>
+            </form>
+            {% endif %}
+          </div>
+          <div class="comment-body-text">{{ comment.content|linebreaks }}</div>
+          {% if user.is_authenticated %}
+          <div class="px-3 pb-2">
+            <button class="btn btn-link btn-sm p-0 text-primary fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#reply-{{ comment.pk }}">Répondre</button>
+          </div>
+          <div class="collapse px-3 pb-3" id="reply-{{ comment.pk }}">
+            <form action="{% url 'commune:add_comment' publication.slug %}" method="post">
+              {% csrf_token %}
+              <input type="hidden" name="parent" value="{{ comment.pk }}">
+              <textarea name="content" rows="2" class="form-control rounded-3" required placeholder="Votre réponse… @nom_utilisateur pour mentionner"></textarea>
+              <button type="submit" class="btn btn-sm btn-primary mt-2 rounded-pill">Envoyer</button>
+            </form>
+          </div>
+          {% endif %}
+          {% for reply in comment.replies.all %}
+            {% if reply.is_visible or is_admin %}
+            <div id="comment-{{ reply.pk }}" class="reply-nested py-3 border-top">
+              <div class="px-3">
+                <span class="comment-author">{{ reply.author.get_username }}</span>
+                <span class="text-muted small ms-1">{{ reply.created_at|date:"d/m/Y H:i" }}</span>
+                {% if not reply.is_visible %}<span class="badge rounded-pill text-bg-warning ms-1">Masqué</span>{% endif %}
+              </div>
+              <div class="comment-body-text px-3 pb-0">{{ reply.content|linebreaks }}</div>
+              {% if user.is_authenticated and user.is_commune_admin %}
+              <div class="px-3">
+                <form action="{% url 'commune:admin_comment_toggle_visibility' reply.pk %}" method="post" class="d-inline">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-link btn-sm p-0 text-muted">{% if reply.is_visible %}Masquer{% else %}Afficher{% endif %}</button>
+                </form>
+              </div>
+              {% endif %}
+            </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+        {% empty %}
+        <p class="text-muted py-3">Aucun commentaire pour le moment. Soyez le premier à réagir.</p>
+        {% endfor %}
+      </div>
+    </section>
+  </article>
+</div>
+{% endblock %}

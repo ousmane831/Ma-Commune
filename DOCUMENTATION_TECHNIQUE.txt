@@ -1,0 +1,69 @@
+Plateforme web — Commune de Niakhar
+====================================
+
+1. Prérequis
+------------
+- Python 3.6 minimum (le fichier requirements.txt cible Django 3.2 LTS pour les anciennes machines).
+- Recommandé : Python 3.10+ et `python -m pip install --upgrade pip` (pip 20.x est souvent trop vieux pour résoudre correctement les dépendances).
+- pip
+
+Pour PostgreSQL en production : serveur PostgreSQL et variables d'environnement
+DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT.
+Sans ces variables, le projet utilise SQLite (fichier db.sqlite3).
+
+
+2. Installation
+-------------
+  cd niakhar_commune
+  python -m venv venv
+  venv\Scripts\activate          (Windows)
+  pip install -r requirements.txt
+  python manage.py migrate
+  python manage.py createsuperuser
+
+Le compte superutilisateur a accès à l’administration Django (/admin/) et au
+tableau de bord « Administration » (lien dans le menu), car le rôle
+administrateur est reconnu pour les superutilisateurs.
+
+Pour un administrateur sans statut superuser : dans l’admin Django, définir le
+champ « role » sur « Administrateur ».
+
+
+3. Lancement en développement
+-----------------------------
+  python manage.py runserver
+
+Site : http://127.0.0.1:8000/
+
+
+4. Structure principale
+-----------------------
+- niakhar/          : configuration Django (settings, urls)
+- commune/          : application métier (modèles, vues, templates)
+- static/commune/   : CSS et JS statiques
+- media/            : fichiers uploadés (images publications, avatars), créé au besoin
+
+
+5. Modèles
+----------
+- User : utilisateur personnalisé (rôle citoyen / administrateur)
+- Publication : annonces (texte, image optionnelle, slug)
+- Comment : commentaires et réponses (parent)
+- Like : j’aime par publication et utilisateur
+- Notification : mentions, réponses, j’aime sur publication
+
+
+6. Sécurité
+-----------
+- Connexion obligatoire pour aimer, commenter et recevoir des notifications d’interaction
+- CSRF sur les formulaires POST
+- Mots de passe hachés (PBKDF2 par défaut Django)
+- En production : définir DJANGO_SECRET_KEY, DJANGO_DEBUG=False,
+  DJANGO_ALLOWED_HOSTS, et activer HTTPS (SECURE_SSL_REDIRECT selon l’hébergement)
+
+
+7. Déploiement
+--------------
+- collectstatic : python manage.py collectstatic
+- Servir les fichiers media avec le serveur web ou le stockage objet
+- Configurer PostgreSQL pour la charge et les sauvegardes

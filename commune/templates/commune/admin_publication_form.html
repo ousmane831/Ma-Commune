@@ -1,0 +1,42 @@
+{% extends "commune/base.html" %}
+{% block title %}{{ title }} — Niakhar{% endblock %}
+{% block content %}
+<div class="form-admin-shell mx-auto">
+  <div class="page-header-row mb-3">
+    <h1 class="font-display mb-0">{{ title }}</h1>
+  </div>
+  <div class="auth-card" style="max-width: none;">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      {% for field in form %}
+      {% if field.name == 'is_published' %}
+      <div class="mb-3 form-check">
+        {{ field }}
+        <label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field.errors }}
+      </div>
+      {% else %}
+      <div class="mb-3">
+        <label class="form-label fw-medium" for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {% if field.name == 'content' %}
+          {{ field }}
+        {% elif field.name == 'image' %}
+          {{ field }}
+          {% if publication and publication.image %}
+          <div class="mt-3"><img src="{{ publication.image.url }}" alt="" class="img-fluid rounded-3 shadow-sm" style="max-height: 220px;"></div>
+          {% endif %}
+        {% else %}
+          {{ field }}
+        {% endif %}
+        {{ field.errors }}
+      </div>
+      {% endif %}
+      {% endfor %}
+      <div class="d-flex flex-wrap gap-2 pt-2">
+        <button type="submit" class="btn btn-primary rounded-pill px-4">Enregistrer</button>
+        <a href="{% url 'commune:home' %}" class="btn btn-outline-secondary rounded-pill">Annuler</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "commune/base.html" %}
+{% block title %}Inscription — Niakhar{% endblock %}
+{% block content %}
+<div class="auth-wrap" style="max-width: 480px;">
+  <div class="auth-card">
+    <h1 class="font-display">Inscription</h1>
+    <p class="auth-sub">Créez un compte pour participer aux échanges et suivre les publications de la commune.</p>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% for field in form %}
+      <div class="mb-3">
+        <label class="form-label fw-medium" for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+        {{ field.errors }}
+      </div>
+      {% endfor %}
+      <button type="submit" class="btn btn-primary mt-1">S’inscrire</button>
+    </form>
+    <div class="auth-footer-link">
+      Déjà inscrit ? <a href="{% url 'commune:login' %}" class="fw-semibold">Se connecter</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

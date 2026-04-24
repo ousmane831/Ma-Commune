@@ -1,0 +1,60 @@
+{% extends "commune/base.html" %}
+
+{% block title %}Actualités — Commune de Niakhar{% endblock %}
+
+{% block content %}
+<section class="hero-nk" aria-labelledby="hero-title">
+  <div class="hero-inner">
+    <p class="hero-kicker">Plateforme officielle</p>
+    <h1 id="hero-title">Bienvenue sur l’espace numérique de la commune</h1>
+    <p class="lead mb-0">Consultez les annonces, réagissez aux publications et restez informé des décisions et actualités locales.</p>
+    {% if user.is_authenticated and user.is_commune_admin %}
+    <div class="mt-4">
+      <a href="{% url 'commune:admin_publication_create' %}" class="btn btn-light">
+        <span class="me-1">＋</span> Nouvelle publication
+      </a>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+<div class="row g-4">
+  {% for pub in publications %}
+  <div class="col-md-6 col-lg-4">
+    <article class="pub-card d-flex flex-column">
+      {% if pub.image %}
+      <a href="{{ pub.get_absolute_url }}" class="pub-card-img-wrap">
+        <img src="{{ pub.image.url }}" alt="">
+      </a>
+      {% else %}
+      <a href="{{ pub.get_absolute_url }}" class="pub-card-img-wrap pub-card-img-placeholder d-flex align-items-center justify-content-center text-decoration-none">
+        <span class="pub-placeholder-letter font-display">{{ pub.title|slice:":1"|upper }}</span>
+      </a>
+      {% endif %}
+      <div class="pub-card-body">
+        <h2 class="pub-card-title">
+          <a href="{{ pub.get_absolute_url }}">{{ pub.title }}</a>
+        </h2>
+        <p class="pub-card-excerpt">{{ pub.content|truncatewords:28 }}</p>
+        <div class="pub-card-meta mt-auto">
+          <time datetime="{{ pub.created_at|date:'c' }}">{{ pub.created_at|date:"d/m/Y" }}</time>
+          <span class="meta-dot">·</span>
+          <span>{{ pub.created_at|date:"H:i" }}</span>
+          {% if pub.author %}
+          <span class="meta-dot">·</span>
+          <span>{{ pub.author.get_username }}</span>
+          {% endif %}
+        </div>
+      </div>
+    </article>
+  </div>
+  {% empty %}
+  <div class="col-12">
+    <div class="empty-state">
+      <p class="mb-2 fw-semibold text-dark">Aucune publication pour le moment</p>
+      <p class="mb-0 small">Revenez bientôt ou contactez la commune pour toute question.</p>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

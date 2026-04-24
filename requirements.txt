@@ -1,0 +1,5 @@
+# Django 3.2 LTS : compatible Python 3.6 à 3.10 (si pip n’installe pas Django 4.x, votre Python est < 3.8).
+# Pour Django 4.2+ : utilisez Python 3.8+ puis remplacez par Django>=4.2,<5.1 et Pillow>=10.
+Django>=3.2.25,<4.0
+Pillow>=8.4.0
+psycopg2-binary>=2.8.6

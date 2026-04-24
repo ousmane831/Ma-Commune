@@ -1,0 +1,85 @@
+{% extends "commune/base.html" %}
+{% block title %}Administration — Niakhar{% endblock %}
+{% block content %}
+<div class="page-header-row mb-2">
+  <div>
+    <p class="text-uppercase small text-muted mb-1" style="letter-spacing:0.08em;">Espace gestionnaire</p>
+    <h1 class="font-display mb-0">Tableau de bord</h1>
+  </div>
+</div>
+<p class="text-muted mb-4">Vue d’ensemble de l’activité et accès rapide à la modération.</p>
+
+<div class="row g-3 g-lg-4 kpi-grid mb-4">
+  <div class="col-6 col-md-3">
+    <div class="kpi-card">
+      <div class="kpi-label">Utilisateurs</div>
+      <div class="kpi-value">{{ stats.users_total }}</div>
+      <div class="kpi-delta">+{{ stats.users_week }} cette semaine</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="kpi-card">
+      <div class="kpi-label">Publications</div>
+      <div class="kpi-value">{{ stats.publications_total }}</div>
+      <div class="kpi-delta">+{{ stats.publications_week }} cette semaine</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="kpi-card">
+      <div class="kpi-label">Commentaires</div>
+      <div class="kpi-value">{{ stats.comments_total }}</div>
+      <div class="kpi-delta">+{{ stats.comments_week }} cette semaine</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="kpi-card">
+      <div class="kpi-label">J’aime</div>
+      <div class="kpi-value">{{ stats.likes_total }}</div>
+      <div class="kpi-delta kpi-delta-muted">Total cumulé</div>
+    </div>
+  </div>
+</div>
+
+<div class="admin-actions">
+  <a href="{% url 'commune:admin_publication_create' %}" class="btn btn-primary rounded-pill px-4">Nouvelle publication</a>
+  <a href="{% url 'commune:admin_users' %}" class="btn btn-outline-primary rounded-pill">Utilisateurs</a>
+  <a href="/admin/" class="btn btn-outline-secondary rounded-pill">Django Admin</a>
+</div>
+
+<h2 class="section-title">Commentaires récents</h2>
+<p class="small text-muted mb-3">Modération : masquez les messages inappropriés depuis la fiche publication ou ce tableau.</p>
+
+<div class="table-card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Auteur</th>
+          <th>Publication</th>
+          <th>Aperçu</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in recent_comments %}
+        <tr>
+          <td class="text-nowrap small">{{ c.created_at|date:"d/m/Y H:i" }}</td>
+          <td>{{ c.author.get_username }}</td>
+          <td><a href="{{ c.publication.get_absolute_url }}" class="fw-medium">{{ c.publication.title|truncatewords:6 }}</a></td>
+          <td class="small text-muted">{{ c.content|truncatewords:14 }}</td>
+          <td class="text-end">
+            <form action="{% url 'commune:admin_comment_toggle_visibility' c.pk %}" method="post" class="d-inline">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-outline-warning rounded-pill">{% if c.is_visible %}Masquer{% else %}Afficher{% endif %}</button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="text-muted text-center py-4">Aucun commentaire.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

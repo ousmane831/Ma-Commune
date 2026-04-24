@@ -1,0 +1,41 @@
+{% extends "commune/base.html" %}
+{% block title %}Notifications — Niakhar{% endblock %}
+{% block content %}
+<div class="page-header-row">
+  <div>
+    <p class="text-uppercase small text-muted mb-1 letter-spacing-1" style="letter-spacing:0.08em;">Centre de messages</p>
+    <h1 class="font-display">Notifications</h1>
+  </div>
+  {% if notifications %}
+  <form action="{% url 'commune:notifications_mark_all_read' %}" method="post" class="m-0">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{% url 'commune:notifications' %}">
+    <button type="submit" class="btn btn-outline-primary btn-sm rounded-pill px-3">Tout marquer comme lu</button>
+  </form>
+  {% endif %}
+</div>
+
+<ul class="list-group list-group-flush notif-list border-0">
+  {% for n in notifications %}
+  <li class="list-group-item d-flex justify-content-between align-items-start gap-3 {% if not n.read_at %}unread{% endif %}">
+    <div class="flex-grow-1">
+      <span class="badge rounded-pill bg-secondary bg-opacity-25 text-dark border">{{ n.get_notification_type_display }}</span>
+      <p class="mb-1 mt-2">{{ n.message }}</p>
+      <small class="text-muted">{{ n.created_at|date:"d/m/Y à H:i" }}</small>
+    </div>
+    <div class="flex-shrink-0">
+      {% if n.link %}
+      <form action="{% url 'commune:notification_mark_read' n.pk %}" method="post" class="d-inline">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-sm btn-primary rounded-pill">Ouvrir</button>
+      </form>
+      {% endif %}
+    </div>
+  </li>
+  {% empty %}
+  <li class="list-group-item border rounded-3 text-center text-muted py-5 bg-white">
+    Aucune notification pour l’instant.
+  </li>
+  {% endfor %}
+</ul>
+{% endblock %}

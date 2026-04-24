@@ -1,0 +1,58 @@
+{% extends "commune/base.html" %}
+{% block title %}Utilisateurs — Administration{% endblock %}
+{% block content %}
+<div class="page-header-row">
+  <div>
+    <p class="text-uppercase small text-muted mb-1" style="letter-spacing:0.08em;">Administration</p>
+    <h1 class="font-display mb-0">Utilisateurs</h1>
+  </div>
+  <a href="{% url 'commune:admin_dashboard' %}" class="btn btn-outline-secondary btn-sm rounded-pill">← Tableau de bord</a>
+</div>
+
+<div class="table-card mt-3">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Utilisateur</th>
+          <th>E-mail</th>
+          <th>Rôle</th>
+          <th>Inscription</th>
+          <th>Publications</th>
+          <th>Statut</th>
+          <th class="text-end">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td class="fw-medium">{{ u.username }}</td>
+          <td class="small text-muted">{{ u.email|default:"—" }}</td>
+          <td><span class="badge rounded-pill bg-light text-dark border">{{ u.get_role_display }}</span></td>
+          <td class="small">{{ u.date_joined|date:"d/m/Y" }}</td>
+          <td>{{ u.pub_count }}</td>
+          <td>
+            {% if u.is_active %}
+            <span class="badge text-bg-success rounded-pill">Actif</span>
+            {% else %}
+            <span class="badge text-bg-secondary rounded-pill">Inactif</span>
+            {% endif %}
+          </td>
+          <td class="text-end">
+            {% if u.pk != request.user.pk %}
+            <form action="{% url 'commune:admin_user_toggle_active' u.pk %}" method="post" class="d-inline">
+              {% csrf_token %}
+              <input type="hidden" name="next" value="{% url 'commune:admin_users' %}">
+              <button type="submit" class="btn btn-sm rounded-pill {% if u.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %}">
+                {% if u.is_active %}Désactiver{% else %}Réactiver{% endif %}
+              </button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
